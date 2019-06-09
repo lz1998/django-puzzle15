@@ -97,9 +97,17 @@ WSGI_APPLICATION = 'puzzle15.wsgi.application'
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    # }
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'django-puzzle15',
+        'USER': 'lz1998',
+        'PASSWORD': '123456lz!',
+        'HOST': 'lz1998sql.mysql.rds.aliyuncs.com',
+        'PORT': '3306',
     }
 }
 

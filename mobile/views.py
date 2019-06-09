@@ -87,10 +87,10 @@ def get_rank(request):
 
         # 如果参数有userid，取个人排名
         userid = request.GET.get("userid")
-        if userid:
-            user_result = Result.objects.filter(user_id=userid).first()
+        user_result = Result.objects.filter(user_id=userid).first()
+        if userid and user_result:
             ret.update({"user_result": {
-                "userid":user_result.user.userid,
+                "userid": user_result.user.userid,
                 "nickname": user_result.user.nickname,
                 "figureurl": user_result.user.figureurl,
                 "moves": user_result.moves,
