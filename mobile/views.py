@@ -2,34 +2,34 @@ from django.shortcuts import render
 from django.http import *
 from mobile.models import *
 import requests, json
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 APPID = "101560284"
-RANK_LIST_SIZE = 10
+PAGE_SIZE = 10
 
 
 # Create your views here.
 
 def set_user(request):
-    userid = request.GET.get("userid")
-    user, created = User.objects.update_or_create(userid=userid)
-    user.access_token = request.GET.get("access_token")
-    user.expires_time = request.GET.get("expires_time")
-    params = {
-        "openid": user.userid,
-        "access_token": user.access_token,
-        "oauth_consumer_key": APPID
-    }
-    qq_info = requests.get(url="https://graph.qq.com/user/get_user_info", params=params)
-    qq_info = json.loads(qq_info.text)
-    user.nickname = qq_info['nickname']
-    user.figureurl = qq_info['figureurl_qq']
-    user.save()
-    ret = {
-        'status': True
-    }
-    return JsonResponse(ret)
     try:
-        pass
+        userid = request.GET.get("userid")
+        user, created = User.objects.update_or_create(userid=userid)
+        user.access_token = request.GET.get("access_token")
+        user.expires_time = int(float(request.GET.get("expires_time")))
+        params = {
+            "openid": user.userid,
+            "access_token": user.access_token,
+            "oauth_consumer_key": APPID
+        }
+        qq_info = requests.get(url="https://graph.qq.com/user/get_user_info", params=params)
+        qq_info = json.loads(qq_info.text)
+        user.nickname = qq_info['nickname']
+        user.figureurl = qq_info['figureurl_qq']
+        user.save()
+        ret = {
+            'status': True
+        }
+        return JsonResponse(ret)
     except Exception as e:
         ret = {
             'status': False
@@ -67,9 +67,21 @@ def index(request):
 
 def get_rank(request):
     try:
-        # 取排行前RANK_LIST_SIZE名
+        # 取排名
+        result_list = Result.objects.filter(result__isnull=False).order_by("result")
+
+        # 分页
+        paginator = Paginator(result_list, PAGE_SIZE)
+        page = request.GET.get('page')
+        try:
+            page = paginator.validate_number(page)
+        except PageNotAnInteger:
+            page = 1
+        except EmptyPage:
+            page = paginator.num_pages
+        result_list = paginator.get_page(page)
+
         rst_list = []
-        result_list = Result.objects.filter(result__isnull=False).order_by("result")[:RANK_LIST_SIZE]
         for result in result_list:
             rst_list.append({
                 "userid": result.user.userid,
@@ -81,6 +93,7 @@ def get_rank(request):
             })
         ret = {
             'status': True,
+            'page': page,
             'rst_size': len(rst_list),
             'rst': rst_list
         }
@@ -101,6 +114,7 @@ def get_rank(request):
             ret.update({"user_rank": user_rank})
 
         return JsonResponse(ret)
+        pass
     except Exception as e:
         ret = {
             'status': False
